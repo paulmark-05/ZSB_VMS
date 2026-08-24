@@ -226,7 +226,7 @@ const transporter =
     nodemailer.createTransport({
 
         host:
-            "gmail-smtp-in.l.google.com",
+            "smtp.gmail.com",
 
         port:
             587,
