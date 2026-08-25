@@ -71,7 +71,7 @@ async function fetchClosedCounters() {
     const res =
         await fetch(
 
-            `/admin/counters?date=${selectedDate}`
+            `${window.BASE_PATH}/admin/counters?date=${selectedDate}`
 
         );
         

@@ -5,6 +5,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Admin Login – ZSB VMS</title>
+    <script src="config.js"></script>
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap"
         rel="stylesheet">
     <style>
@@ -329,7 +330,7 @@
             }
 
             try {
-                const res = await fetch("/admin-login", {
+                const res = await fetch(`${window.BASE_PATH}/admin-login`, {
                     method: "POST",
                     headers: { "Content-Type": "application/json" },
                     body: JSON.stringify({ username, password })
@@ -340,7 +341,7 @@
                 if (data.success) {
                     document.getElementById("successOverlay").style.display = "flex";
                     setTimeout(() => {
-                        window.location.href = "/admin";
+                        window.location.href = `${window.BASE_PATH}/admin`;
                     }, 3000);
                 } else {
                     errorMsg.textContent = data.message || "Invalid credentials.";

@@ -4,7 +4,7 @@ async function checkAuth() {
 
         const res =
             await fetch(
-                "/check-auth"
+                `${window.BASE_PATH}/check-auth`
             );
 
         const data =
@@ -15,7 +15,7 @@ async function checkAuth() {
         ) {
 
             window.location.href =
-                "/admin-login.html";
+                `${window.BASE_PATH}/admin-login.html`;
 
             return false;
         }
@@ -26,7 +26,7 @@ async function checkAuth() {
     catch (err) {
 
         window.location.href =
-            "/admin-login.html";
+            `${window.BASE_PATH}/admin-login.html`;
 
         return false;
     }
@@ -104,7 +104,7 @@ async function loadVisitors() {
 
     const selectedDate = document.getElementById("dateFilter").value;
 
-    const res = await fetch(`/admin/visitors?date=${selectedDate}`);
+    const res = await fetch(`${window.BASE_PATH}/admin/visitors?date=${selectedDate}`);
     allData = await res.json();
 
     populateFilterOptions();
@@ -117,7 +117,7 @@ async function loadUsers() {
 
     try {
 
-        const response = await fetch("/admin/users", {
+        const response = await fetch(`${window.BASE_PATH}/admin/users`, {
             credentials: "same-origin"
         });
 
@@ -276,7 +276,7 @@ console.log("Create User clicked");
 
     const response =
         await fetch(
-            "/admin/users",
+            `${window.BASE_PATH}/admin/users`,
             {
 
                 method: "POST",
@@ -437,7 +437,7 @@ async function toggleStatus(
             : "pending";
 
     await fetch(
-        `/admin/complete/${id}`,
+        `${window.BASE_PATH}/admin/complete/${id}`,
         {
             method: "POST",
 
@@ -510,7 +510,7 @@ async function loadCounters() {
 
         await fetch(
 
-            `/admin/counters?date=${selectedDate}`
+            `${window.BASE_PATH}/admin/counters?date=${selectedDate}`
         );
 
     const data =
@@ -614,9 +614,9 @@ async function toggleCounter(
 
         isOpen
 
-            ? "/admin/open-counter"
+            ? `${window.BASE_PATH}/admin/open-counter`
 
-            : "/admin/close-counter";
+            : `${window.BASE_PATH}/admin/close-counter`;
 
     await fetch(
 
@@ -933,7 +933,7 @@ async function startExport() {
 
     try {
 
-        const response = await fetch(`/admin/export?${query.toString()}`);
+        const response = await fetch(`${window.BASE_PATH}/admin/export?${query.toString()}`);
 
         const blob = await response.blob();
 
@@ -1009,12 +1009,12 @@ async function logout() {
     ) return;
 
     await fetch(
-        "/logout",
+        `${window.BASE_PATH}/logout`,
         {
             method: "POST"
         }
     );
 
     window.location.href =
-        "/admin-login.html";
+        `${window.BASE_PATH}/admin-login.html`;
 }

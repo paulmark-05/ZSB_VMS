@@ -156,7 +156,7 @@ document.addEventListener("DOMContentLoaded", () => {
                 "Please wait while we generate your token";
 
             // ===== API CALL =====
-            const res = await fetch("/book", {
+            const res = await fetch(`${window.BASE_PATH}/book`, {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
                 body: JSON.stringify(data)
@@ -190,7 +190,7 @@ document.addEventListener("DOMContentLoaded", () => {
                     ) {
 
                         await fetch(
-                            "/send-token-email",
+                            `${window.BASE_PATH}/send-token-email`,
                             {
 
                                 method: "POST",

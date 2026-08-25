@@ -33,6 +33,11 @@ app.set(
     1
 );
 
+// Entire app is served under this path prefix
+// (change here if the deployment path ever moves)
+const BASE_PATH = "/visitors";
+const router = express.Router();
+
 app.use(express.json({
     limit: "20mb"
 }));
@@ -81,7 +86,7 @@ app.use(
 );
 
 
-app.use(
+router.use(
     express.static(
         path.join(
             __dirname,
@@ -90,7 +95,7 @@ app.use(
     )
 );
 
-app.use(
+router.use(
     "/admin",
     usersRoutes
 );
@@ -100,7 +105,7 @@ app.use(
    🌐 ROUTES
 ================================ */
 
-app.get("/", (req, res) => {
+router.get("/", (req, res) => {
 
     res.sendFile(
         path.join(
@@ -116,7 +121,7 @@ app.get("/", (req, res) => {
    🔐 ADMIN ROUTE
 ================================ */
 
-app.get(
+router.get(
     "/admin",
     (req, res) => {
 
@@ -149,7 +154,7 @@ app.get(
 
 // BLOCK DIRECT DASHBOARD ACCESS
 
-app.get(
+router.get(
     "/admin-dashboard.html",
     (req, res) => {
 
@@ -157,9 +162,7 @@ app.get(
             !req.session.user
         ) {
 
-            return res.redirect(
-                "/admin"
-            );
+            return res.redirect(BASE_PATH + "/admin");
         }
 
         res.sendFile(
@@ -176,7 +179,7 @@ app.get(
 
 // LOGIN PAGE PROTECTION
 
-app.get(
+router.get(
     "/admin-login.html",
     (req, res) => {
 
@@ -184,9 +187,7 @@ app.get(
             req.session.user
         ) {
 
-            return res.redirect(
-                "/admin"
-            );
+            return res.redirect(BASE_PATH + "/admin");
         }
 
         res.sendFile(
@@ -459,7 +460,7 @@ const counterMap = {
    📡 BOOK API
 ================================ */
 
-app.post("/book", async (req, res) => {
+router.post("/book", async (req, res) => {
 
     try {
         console.log("🔥 /book API HIT", req.body);
@@ -797,7 +798,7 @@ function requireAuth(req, res, next) {
 
 
 // LOGIN
-app.post(
+router.post(
     "/admin-login",
     async (req, res) => {
 
@@ -904,7 +905,7 @@ app.post(
 
 // CHECK AUTH
 
-app.get(
+router.get(
     "/check-auth",
     (req, res) => {
 
@@ -931,7 +932,7 @@ app.get(
 
 // LOGOUT
 
-app.post(
+router.post(
     "/logout",
     (req, res) => {
 
@@ -952,7 +953,7 @@ app.post(
 ================================ */
 
 // GET ALL
-app.get("/admin/visitors", requireAuth, async (req, res) => {
+router.get("/admin/visitors", requireAuth, async (req, res) => {
 
     const { date } = req.query;
 
@@ -985,7 +986,7 @@ app.get("/admin/visitors", requireAuth, async (req, res) => {
 });
 
 // MARK COMPLETE
-app.post("/admin/complete/:id", requireAuth, async (req, res) => {
+router.post("/admin/complete/:id", requireAuth, async (req, res) => {
 
     const { status } = req.body;
 
@@ -1034,7 +1035,7 @@ app.post("/admin/complete/:id", requireAuth, async (req, res) => {
 });
 
 // EXPORT CSV
-app.get("/admin/export", requireCounterOrSuper, async (req, res) => {
+router.get("/admin/export", requireCounterOrSuper, async (req, res) => {
     const { from, to, fields } = req.query;
 
     let query = {};
@@ -1287,7 +1288,7 @@ app.get("/admin/export", requireCounterOrSuper, async (req, res) => {
 
 // GET COUNTERS
 
-app.get(
+router.get(
     "/admin/counters",
     async (req, res) => {
 
@@ -1323,7 +1324,7 @@ app.get(
 
 // CLOSE COUNTER
 
-app.post(
+router.post(
     "/admin/close-counter",
     requireSuperAdmin,
     async (req, res) => {
@@ -1385,7 +1386,7 @@ app.post(
 
 // OPEN COUNTER
 
-app.post(
+router.post(
     "/admin/open-counter",
     requireSuperAdmin,
     async (req, res) => {
@@ -1429,7 +1430,7 @@ app.post(
    📧 SEND TOKEN EMAIL
 ================================ */
 
-app.post("/send-token-email", async (req, res) => {
+router.post("/send-token-email", async (req, res) => {
 
     try {
 
@@ -1577,6 +1578,11 @@ app.post("/send-token-email", async (req, res) => {
         });
     }
 });
+
+app.use(BASE_PATH, router);
+
+// Convenience redirect from bare domain root to the app
+app.get("/", (req, res) => res.redirect(BASE_PATH));
 
 /* ================================
    🚀 START SERVER
