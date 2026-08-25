@@ -33,9 +33,6 @@ app.set(
     1
 );
 
-// Entire app is served under this path prefix
-// (change here if the deployment path ever moves)
-const BASE_PATH = "/visitors";
 const router = express.Router();
 
 app.use(express.json({
@@ -162,7 +159,7 @@ router.get(
             !req.session.user
         ) {
 
-            return res.redirect(BASE_PATH + "/admin");
+            return res.redirect("/admin");
         }
 
         res.sendFile(
@@ -187,7 +184,7 @@ router.get(
             req.session.user
         ) {
 
-            return res.redirect(BASE_PATH + "/admin");
+            return res.redirect("/admin");
         }
 
         res.sendFile(
@@ -1579,10 +1576,7 @@ router.post("/send-token-email", async (req, res) => {
     }
 });
 
-app.use(BASE_PATH, router);
-
-// Convenience redirect from bare domain root to the app
-app.get("/", (req, res) => res.redirect(BASE_PATH));
+app.use(router);
 
 /* ================================
    🚀 START SERVER
