@@ -6,6 +6,19 @@ const dateEl = document.getElementById("boardDate");
 const connectionBanner = document.getElementById("connectionBanner");
 const overrideBanner = document.getElementById("overrideBanner");
 
+const WEEKDAYS = ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"];
+const MONTHS = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
+
+function formatDDMMMYY(dateObj) {
+
+    const dd = String(dateObj.getDate()).padStart(2, "0");
+    const mon = MONTHS[dateObj.getMonth()];
+    const yy = String(dateObj.getFullYear()).slice(-2);
+
+    return `${dd} ${mon} ${yy}`;
+
+}
+
 function densityClass(count) {
 
     if (count <= 4) return "density-1";
@@ -44,10 +57,10 @@ function updateOverrideBanner(activeDate) {
 
     }
 
-    const [y, m, d] = activeDate.split("-");
+    const [y, m, d] = activeDate.split("-").map(Number);
 
     overrideBanner.textContent =
-        `Showing queue for ${d}-${m}-${y}, not today`;
+        `Showing queue for ${formatDDMMMYY(new Date(y, m - 1, d))}, not today`;
 
     overrideBanner.classList.add("show");
 
@@ -125,19 +138,13 @@ function updateClock() {
 
     const now = new Date();
 
-    clockEl.textContent = now.toLocaleTimeString("en-IN", {
-        hour: "2-digit",
-        minute: "2-digit",
-        second: "2-digit",
-        hour12: false
-    });
+    const hh = String(now.getHours()).padStart(2, "0");
+    const mm = String(now.getMinutes()).padStart(2, "0");
 
-    dateEl.textContent = now.toLocaleDateString("en-IN", {
-        weekday: "long",
-        day: "2-digit",
-        month: "long",
-        year: "numeric"
-    });
+    clockEl.textContent = `${hh}${mm} HRS`;
+
+    dateEl.textContent =
+        `${WEEKDAYS[now.getDay()]} ${formatDDMMMYY(now)}`;
 
 }
 
