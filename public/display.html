@@ -1,0 +1,49 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="robots" content="noindex, nofollow">
+    <title>ZSB Visitor Queue Display</title>
+
+    <link
+        href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&family=Montserrat:wght@700;800&display=swap"
+        rel="stylesheet">
+
+    <script src="config.js"></script>
+    <link rel="stylesheet" href="display.css">
+</head>
+
+<body>
+
+    <div class="board">
+
+        <header class="board-header">
+
+            <div class="board-brand">
+                <img src="logo.jpg" class="board-logo">
+                <div>
+                    <div class="board-title">ZSB Visitor Queue</div>
+                    <div class="board-subtitle">North 24 Parganas</div>
+                </div>
+            </div>
+
+            <div class="board-clock" id="clock">--:--</div>
+
+        </header>
+
+        <div class="board-grid" id="boardGrid"></div>
+
+        <div id="connectionBanner" class="connection-banner">
+            Reconnecting&hellip;
+        </div>
+
+    </div>
+
+    <script src="/socket.io/socket.io.js"></script>
+    <script src="display.js"></script>
+
+</body>
+
+</html>
