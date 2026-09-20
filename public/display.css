@@ -86,6 +86,26 @@ html, body {
     line-height: 1;
 }
 
+/* ================= OVERRIDE BANNER ================= */
+
+.override-banner {
+    display: none;
+    margin-top: 14px;
+    padding: 8px 16px;
+    background: #fdf0da;
+    border: 1px solid #f0cf8f;
+    border-radius: 10px;
+    color: #8a5a0e;
+    font-weight: 600;
+    font-size: 15px;
+    text-align: center;
+    flex-shrink: 0;
+}
+
+.override-banner.show {
+    display: block;
+}
+
 /* ================= GRID ================= */
 
 .board-grid {

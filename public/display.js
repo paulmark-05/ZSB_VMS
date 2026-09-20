@@ -4,6 +4,7 @@ const grid = document.getElementById("boardGrid");
 const clockEl = document.getElementById("clock");
 const dateEl = document.getElementById("boardDate");
 const connectionBanner = document.getElementById("connectionBanner");
+const overrideBanner = document.getElementById("overrideBanner");
 
 function densityClass(count) {
 
@@ -32,7 +33,29 @@ function buildColumns() {
     }
 }
 
+function updateOverrideBanner(activeDate) {
+
+    const today = new Date().toISOString().split("T")[0];
+
+    if (activeDate === today) {
+
+        overrideBanner.classList.remove("show");
+        return;
+
+    }
+
+    const [y, m, d] = activeDate.split("-");
+
+    overrideBanner.textContent =
+        `Showing queue for ${d}-${m}-${y}, not today`;
+
+    overrideBanner.classList.add("show");
+
+}
+
 function renderQueue(data) {
+
+    updateOverrideBanner(data.date);
 
     const byCounter = {};
 
