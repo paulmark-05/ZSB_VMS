@@ -47,6 +47,11 @@ if (typeof io !== "undefined") {
         loadCounters();
     });
 
+    socket.on("queue-update", () => {
+        console.log("🔁 Queue updated");
+        loadVisitors();
+    });
+
 } else {
     console.error("❌ Socket.IO not loaded");
 }
@@ -349,7 +354,10 @@ function renderTable(data) {
         <td>${v.phone}</td>
         <td>${v.email || "—"}</td>
         <td>${formatRegistration(v.createdAt)}</td>
-        
+        <td class="actions-cell" style="display:${window.currentUser?.role === "superadmin" ? "table-cell" : "none"};">
+            <button class="delete-btn" onclick="deleteVisitor('${v._id}')">Delete</button>
+        </td>
+
         `;
 
         tbody.appendChild(tr);
@@ -486,6 +494,37 @@ async function toggleStatus(
     }
 
     updateCounters(allData);
+}
+
+async function deleteVisitor(id) {
+
+    const confirmDelete =
+        confirm(
+            "Permanently delete this visitor record? This cannot be undone."
+        );
+
+    if (!confirmDelete) return;
+
+    const response = await fetch(
+        `${window.BASE_PATH}/admin/visitors/${id}`,
+        { method: "DELETE" }
+    );
+
+    const result = await response.json();
+
+    if (!result.success) {
+
+        showToast(result.message || "Unable to delete record.");
+        return;
+
+    }
+
+    allData = allData.filter(v => v._id !== id);
+
+    renderTable(allData);
+    updateCounters(allData);
+    showToast("Record deleted.");
+
 }
 
 // ================= COUNTERS =================
@@ -758,6 +797,15 @@ document.addEventListener(
 
         window.currentUser =
             session.user;
+
+        if (window.currentUser.role === "superadmin") {
+
+            document
+                .getElementById("actionsHeader")
+                .style.display = "table-cell";
+
+        }
+
         if (window.currentUser.role === "counter") {
 
             const createBtn =

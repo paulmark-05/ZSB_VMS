@@ -137,6 +137,18 @@ button:hover {
     transform: scale(1.05);
 }
 
+.delete-btn {
+    background: #b3253a;
+    border-color: #b3253a;
+    padding: 6px 14px;
+    font-size: 13px;
+}
+
+.delete-btn:hover {
+    background: #8a1c2c;
+    border-color: #8a1c2c;
+}
+
 
 table {
 

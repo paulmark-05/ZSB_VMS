@@ -580,6 +580,7 @@ router.post("/book", async (req, res) => {
         });
 
         io.emit("new-booking");
+        io.emit("queue-update");
 
 
 
@@ -1028,6 +1029,27 @@ router.post("/admin/complete/:id", requireAuth, async (req, res) => {
 
     await visitor.save();
 
+    io.emit("queue-update");
+
+    res.json({ success: true });
+});
+
+// DELETE VISITOR RECORD (Super Admin only)
+router.delete("/admin/visitors/:id", requireSuperAdmin, async (req, res) => {
+
+    const visitor = await Visitor.findByIdAndDelete(req.params.id);
+
+    if (!visitor) {
+
+        return res.status(404).json({
+            success: false,
+            message: "Record not found"
+        });
+
+    }
+
+    io.emit("queue-update");
+
     res.json({ success: true });
 });
 
@@ -1274,6 +1296,58 @@ router.get("/admin/export", requireCounterOrSuper, async (req, res) => {
 
     await workbook.xlsx.write(res);
     res.end();
+});
+
+/* ================================
+   📺 TV QUEUE DISPLAY (public, no login)
+================================ */
+
+router.get("/display", (req, res) => {
+
+    res.sendFile(
+        path.join(
+            __dirname,
+            "public",
+            "display.html"
+        )
+    );
+
+});
+
+router.get("/display/queue", async (req, res) => {
+
+    const today =
+        new Date()
+            .toISOString()
+            .split("T")[0];
+
+    const [visitors, counterSettings] = await Promise.all([
+
+        Visitor.find({
+
+            date: today,
+
+            status: { $ne: "completed" }
+
+        })
+            .select("counter sequence name -_id")
+            .sort({ counter: 1, sequence: 1 }),
+
+        CounterSettings.findOne({ date: today })
+
+    ]);
+
+    res.json({
+
+        date: today,
+
+        closedCounters:
+            counterSettings?.closedCounters || [],
+
+        visitors
+
+    });
+
 });
 
 /* ================================
