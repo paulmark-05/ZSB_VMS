@@ -1330,7 +1330,7 @@ router.get("/display/queue", async (req, res) => {
             status: { $ne: "completed" }
 
         })
-            .select("counter sequence name -_id")
+            .select("counter sequence rank name -_id")
             .sort({ counter: 1, sequence: 1 }),
 
         CounterSettings.findOne({ date: today })

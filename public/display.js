@@ -71,6 +71,7 @@ function renderQueue(data) {
         bodyEl.innerHTML = tokens.map(v => `
             <div class="token-row">
                 <div class="token-number">T-${v.sequence}</div>
+                <div class="token-rank">${v.rank || ""}</div>
                 <div class="token-name">${v.name || ""}</div>
             </div>
         `).join("");

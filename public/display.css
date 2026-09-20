@@ -8,8 +8,8 @@ html, body {
     width: 100%;
     height: 100%;
     overflow: hidden;
-    background: #0c1224;
-    color: #f2f4f8;
+    background: #f4f5f9;
+    color: #1a1f2e;
     font-family: 'Poppins', Arial, sans-serif;
 }
 
@@ -45,6 +45,7 @@ html, body {
     background: #fff;
     border-radius: 8px;
     padding: 4px;
+    border: 1px solid #e2e5ee;
 }
 
 .board-title {
@@ -52,11 +53,12 @@ html, body {
     font-weight: 800;
     font-size: 30px;
     letter-spacing: 0.3px;
+    color: #12213f;
 }
 
 .board-subtitle {
     font-size: 15px;
-    color: #9aa4c2;
+    color: #6b7280;
     margin-top: 2px;
 }
 
@@ -66,6 +68,7 @@ html, body {
     font-size: 40px;
     font-variant-numeric: tabular-nums;
     letter-spacing: 1px;
+    color: #12213f;
 }
 
 /* ================= GRID ================= */
@@ -80,18 +83,19 @@ html, body {
 }
 
 .counter-column {
-    background: #141b34;
-    border: 1px solid #262f52;
+    background: #ffffff;
+    border: 1px solid #e2e5ee;
     border-radius: 14px;
     display: flex;
     flex-direction: column;
     min-height: 0;
     overflow: hidden;
+    box-shadow: 0 1px 3px rgba(18, 33, 63, 0.06);
 }
 
 .counter-column.closed {
-    background: #1a1620;
-    border-color: #3a2430;
+    background: #fdf4f4;
+    border-color: #f0d6d6;
 }
 
 .counter-header {
@@ -101,14 +105,15 @@ html, body {
     font-family: 'Montserrat', sans-serif;
     font-weight: 700;
     font-size: 20px;
-    background: #1c2648;
-    border-bottom: 1px solid #262f52;
+    color: #12213f;
+    background: #eef1fa;
+    border-bottom: 1px solid #e2e5ee;
     letter-spacing: 0.5px;
 }
 
 .counter-column.closed .counter-header {
-    background: #241a24;
-    color: #d99;
+    background: #f7e3e3;
+    color: #a3313e;
 }
 
 .counter-body {
@@ -123,30 +128,42 @@ html, body {
 
 .token-row {
     flex-shrink: 0;
-    background: #1c2648;
+    background: #f7f8fc;
     border-left: 5px solid #d4af37;
     border-radius: 8px;
     padding: 8px 10px;
     display: flex;
     flex-direction: column;
-    gap: 2px;
+    gap: 1px;
 }
 
 .token-row:first-child {
-    border-left-color: #4fd67a;
-    background: #16321f;
+    border-left-color: #2f9e57;
+    background: #eef8f0;
 }
 
 .token-number {
     font-family: 'Montserrat', sans-serif;
     font-weight: 800;
     line-height: 1.05;
+    color: #12213f;
+}
+
+.token-rank {
+    color: #7a8199;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.3px;
+    line-height: 1.2;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
 }
 
 .token-name {
-    color: #b7c0e0;
+    color: #2c3348;
     font-weight: 500;
-    line-height: 1.15;
+    line-height: 1.2;
     overflow: hidden;
     text-overflow: ellipsis;
     white-space: nowrap;
@@ -156,28 +173,32 @@ html, body {
 .counter-closed-label {
     margin: auto;
     text-align: center;
-    color: #6b7398;
+    color: #9aa0b4;
     font-size: 15px;
     padding: 0 10px;
 }
 
 .counter-closed-label {
-    color: #c97a86;
+    color: #a3313e;
     font-weight: 600;
 }
 
 /* density steps, applied by JS based on row count */
-.density-1 .token-number { font-size: 46px; }
-.density-1 .token-name { font-size: 20px; }
+.density-1 .token-number { font-size: 40px; }
+.density-1 .token-rank { font-size: 15px; }
+.density-1 .token-name { font-size: 18px; }
 
-.density-2 .token-number { font-size: 34px; }
-.density-2 .token-name { font-size: 17px; }
+.density-2 .token-number { font-size: 30px; }
+.density-2 .token-rank { font-size: 13px; }
+.density-2 .token-name { font-size: 15px; }
 
-.density-3 .token-number { font-size: 25px; }
-.density-3 .token-name { font-size: 14px; }
+.density-3 .token-number { font-size: 22px; }
+.density-3 .token-rank { font-size: 11px; }
+.density-3 .token-name { font-size: 13px; }
 
-.density-4 .token-number { font-size: 19px; }
-.density-4 .token-name { font-size: 12px; }
+.density-4 .token-number { font-size: 17px; }
+.density-4 .token-rank { font-size: 10px; }
+.density-4 .token-name { font-size: 11px; }
 .density-4 .token-row { padding: 5px 8px; }
 
 /* ================= CONNECTION BANNER ================= */
