@@ -370,6 +370,36 @@ const CounterSettings =
         counterSettingsSchema
     );
 
+/* ================================
+   🧠 DISPLAY SETTINGS SCHEMA
+   (which date the TV queue board shows)
+================================ */
+
+const displaySettingsSchema =
+    new mongoose.Schema({
+
+        key: {
+            type: String,
+            required: true,
+            unique: true,
+            default: "display"
+        },
+
+        date: {
+            type: String,
+            required: true
+        }
+
+    });
+
+const DisplaySettings =
+    mongoose.model(
+
+        "DisplaySettings",
+
+        displaySettingsSchema
+    );
+
 const fs = require("fs");
 
 async function generateTokenImage(data) {
@@ -1321,11 +1351,17 @@ router.get("/display/queue", async (req, res) => {
             .toISOString()
             .split("T")[0];
 
+    const displaySettings =
+        await DisplaySettings.findOne({ key: "display" });
+
+    const activeDate =
+        displaySettings?.date || today;
+
     const [visitors, counterSettings] = await Promise.all([
 
         Visitor.find({
 
-            date: today,
+            date: activeDate,
 
             status: { $ne: "completed" }
 
@@ -1333,13 +1369,13 @@ router.get("/display/queue", async (req, res) => {
             .select("counter sequence rank name -_id")
             .sort({ counter: 1, sequence: 1 }),
 
-        CounterSettings.findOne({ date: today })
+        CounterSettings.findOne({ date: activeDate })
 
     ]);
 
     res.json({
 
-        date: today,
+        date: activeDate,
 
         closedCounters:
             counterSettings?.closedCounters || [],
@@ -1347,6 +1383,55 @@ router.get("/display/queue", async (req, res) => {
         visitors
 
     });
+
+});
+
+// GET the date currently shown on the TV board (Super Admin only)
+router.get("/admin/display-date", requireSuperAdmin, async (req, res) => {
+
+    const today =
+        new Date()
+            .toISOString()
+            .split("T")[0];
+
+    const settings =
+        await DisplaySettings.findOne({ key: "display" });
+
+    res.json({
+
+        date: settings?.date || today
+
+    });
+
+});
+
+// SET the date shown on the TV board (Super Admin only)
+router.post("/admin/display-date", requireSuperAdmin, async (req, res) => {
+
+    const { date } = req.body;
+
+    if (!date || !/^\d{4}-\d{2}-\d{2}$/.test(date)) {
+
+        return res.status(400).json({
+            success: false,
+            message: "A valid date (YYYY-MM-DD) is required."
+        });
+
+    }
+
+    await DisplaySettings.findOneAndUpdate(
+
+        { key: "display" },
+
+        { date },
+
+        { upsert: true }
+
+    );
+
+    io.emit("queue-update");
+
+    res.json({ success: true, date });
 
 });
 

@@ -77,6 +77,27 @@
                 <div id="counterPanel"></div>
             </div>
 
+            <div id="displayDateSection" style="
+                    display:flex;
+                    align-items:center;
+                    gap:12px;
+                    flex-wrap:wrap;
+                    margin-bottom:20px;
+                    ">
+
+                <h3 style="margin:0;">TV Display Date</h3>
+
+                <input type="date" id="displayDateInput">
+
+                <button onclick="setDisplayDate()">Apply</button>
+                <button onclick="setDisplayDate(true)">Show Today</button>
+
+                <span style="color:#666;font-size:13px;">
+                    Controls which day's queue shows on the TV board at /display
+                </span>
+
+            </div>
+
             <div style="
                     display:flex;
                     align-items:center;

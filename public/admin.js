@@ -683,6 +683,62 @@ async function toggleCounter(
     loadCounters();
 }
 
+// ================= TV DISPLAY DATE =================
+
+async function loadDisplayDate() {
+
+    const res = await fetch(`${window.BASE_PATH}/admin/display-date`);
+    const data = await res.json();
+
+    document.getElementById("displayDateInput").value = data.date;
+
+}
+
+async function setDisplayDate(useToday = false) {
+
+    const date = useToday
+
+        ? new Date().toISOString().split("T")[0]
+
+        : document.getElementById("displayDateInput").value;
+
+    if (!date) {
+
+        showToast("Select a date first.");
+        return;
+
+    }
+
+    const response = await fetch(
+
+        `${window.BASE_PATH}/admin/display-date`,
+
+        {
+            method: "POST",
+
+            headers: {
+                "Content-Type": "application/json"
+            },
+
+            body: JSON.stringify({ date })
+        }
+    );
+
+    const result = await response.json();
+
+    if (!result.success) {
+
+        showToast(result.message || "Unable to update display date.");
+        return;
+
+    }
+
+    document.getElementById("displayDateInput").value = result.date;
+
+    showToast(`TV board now showing ${result.date}.`);
+
+}
+
 // ================= SEARCH =================
 function populateFilterOptions() {
 
@@ -804,6 +860,8 @@ document.addEventListener(
                 .getElementById("actionsHeader")
                 .style.display = "table-cell";
 
+            loadDisplayDate();
+
         }
 
         if (window.currentUser.role === "counter") {
@@ -836,6 +894,11 @@ document.addEventListener(
             document
                 .getElementById(
                     "counterControlSection")
+                .style.display = "none";
+
+            document
+                .getElementById(
+                    "displayDateSection")
                 .style.display = "none";
 
         }
