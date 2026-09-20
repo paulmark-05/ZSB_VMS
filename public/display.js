@@ -2,6 +2,7 @@ const TOTAL_COUNTERS = 7;
 
 const grid = document.getElementById("boardGrid");
 const clockEl = document.getElementById("clock");
+const dateEl = document.getElementById("boardDate");
 const connectionBanner = document.getElementById("connectionBanner");
 
 function densityClass(count) {
@@ -106,6 +107,13 @@ function updateClock() {
         minute: "2-digit",
         second: "2-digit",
         hour12: false
+    });
+
+    dateEl.textContent = now.toLocaleDateString("en-IN", {
+        weekday: "long",
+        day: "2-digit",
+        month: "long",
+        year: "numeric"
     });
 
 }
