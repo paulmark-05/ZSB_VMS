@@ -378,13 +378,38 @@ html, body {
    a 4-5 digit token number at a large font plus a name — so the fallback
    kicks in as soon as the iframe drops below 900px, not just on phones. */
 @media (max-width: 900px) {
+    /* The kiosk desktop layout crams every counter into exactly one
+       screen's height with no scrolling — that only works because a TV
+       kiosk has a fixed, known viewport. On a phone (or embedded on the
+       ZSB portal, which already scrolls), forcing 7 counters into one
+       screen leaves no room to show queued visitors and clips them
+       instead. So on mobile the page is allowed to grow and scroll, and
+       each counter gets a fixed-height card that shows ~2.5 waiting
+       visitors and scrolls internally for the rest, rather than shrinking
+       everything until it's unreadable. */
+    html, body {
+        height: auto;
+        overflow: visible;
+    }
+
+    .board {
+        height: auto;
+        min-height: 100vh;
+    }
+
     .board-main {
         flex-direction: column;
     }
 
     .board-grid {
         grid-template-columns: repeat(4, 1fr);
-        grid-auto-rows: 1fr;
+        grid-auto-rows: auto;
+    }
+
+    .counter-body {
+        flex: none;
+        height: 210px;
+        overflow-y: auto;
     }
 
     .ads-panel {
