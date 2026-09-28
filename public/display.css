@@ -243,7 +243,7 @@ html, body {
 
 .ads-panel {
     flex-shrink: 0;
-    width: 280px;
+    width: 240px;
     background: #12213f;
     border-radius: 14px;
     padding: 16px;
@@ -325,10 +325,17 @@ html, body {
     font-weight: 600;
 }
 
-/* density steps, applied by JS based on row count */
-.density-1 .token-number { font-size: 40px; }
-.density-1 .token-rank { font-size: 15px; }
-.density-1 .token-name { font-size: 18px; }
+/* density steps, applied by JS based on row count. Since the board now caps
+   each counter at 3 rows, density-1 (<=4 rows) is the only step that ever
+   actually applies — but its sizes still need to work both on a real kiosk
+   screen (very wide, own viewport) and inside a narrower host-page iframe
+   (e.g. embedded on the ZSB portal, where the host page's own layout can
+   leave much less than a kiosk's width). vw-based clamps size the numbers
+   off the iframe's own width so they use full kiosk-sized digits when
+   there's room and shrink just enough to avoid wrapping when there isn't. */
+.density-1 .token-number { font-size: clamp(22px, 2.2vw, 42px); }
+.density-1 .token-rank { font-size: clamp(11px, 0.9vw, 15px); }
+.density-1 .token-name { font-size: clamp(12px, 1.05vw, 18px); }
 
 .density-2 .token-number { font-size: 30px; }
 .density-2 .token-rank { font-size: 13px; }
@@ -365,10 +372,12 @@ html, body {
 
 /* Breakpoints are widths of THIS page's own viewport — whether that's a real
    screen (kiosk TV) or an <iframe> embedded elsewhere at a narrower width
-   (e.g. the live board embedded on the public ZSB portal). 7 columns fit
-   comfortably down to ~760px; below that, fewer columns keep each one
-   legible instead of shrinking text to illegibility. */
-@media (max-width: 760px) {
+   (e.g. the live board embedded on the public ZSB portal, where the host
+   page's own layout can pin the iframe to ~870px wide even on a fairly
+   wide screen). 7 columns need real room to stay legible — each one holds
+   a 4-5 digit token number at a large font plus a name — so the fallback
+   kicks in as soon as the iframe drops below 900px, not just on phones. */
+@media (max-width: 900px) {
     .board-main {
         flex-direction: column;
     }
