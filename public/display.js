@@ -1,12 +1,13 @@
 const TOTAL_COUNTERS = 7;
-const MAX_VISIBLE_PER_COUNTER = 4;
+const MAX_VISIBLE_PER_COUNTER = 3;
 
 const grid = document.getElementById("boardGrid");
 const clockEl = document.getElementById("clock");
 const dateEl = document.getElementById("boardDate");
 const connectionBanner = document.getElementById("connectionBanner");
 const overrideBanner = document.getElementById("overrideBanner");
-const adsStrip = document.getElementById("adsStrip");
+const adsPanel = document.getElementById("adsPanel");
+const adsPanelBody = document.getElementById("adsPanelBody");
 
 const WEEKDAYS = ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"];
 const MONTHS = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
@@ -172,9 +173,9 @@ function playChime() {
     }
 }
 
-/* ================= SPONSORED ADS STRIP ================= */
+/* ================= SPONSORED ADS PANEL ================= */
 // Pulls the same Advertisements shown on the public ZSB portal (CORS is
-// already open there) and rotates through them along the bottom of the board.
+// already open there) and rotates through them in a side panel next to the grid.
 const ADS_API = "https://zsb-barasat.in/api/content";
 let adsList = [];
 let adsIndex = 0;
@@ -186,13 +187,24 @@ function renderAd() {
     adsIndex++;
 
     const name = ad.name || "Advertisement";
-    const caption = ad.kind === "listing"
+    const desc = ad.kind === "listing"
         ? [ad.category, ad.location].filter(Boolean).join(" · ")
         : (ad.description ? ad.description.replace(/<[^>]*>/g, " ").trim() : (ad.caption || ""));
 
-    adsStrip.innerHTML = `
-        ${ad.imageUrl ? `<img class="ads-strip-img" src="${ad.imageUrl}" alt="" />` : ""}
-        <span class="ads-strip-text"><strong>${name}</strong>${caption ? " — " + caption : ""}</span>
+    // A poster ad with a link gets a scannable QR code so viewers standing at
+    // the kiosk can jump straight to that page on their own phone.
+    const qrBlock = ad.link
+        ? `<div class="ads-panel-qr">
+               <img src="https://api.qrserver.com/v1/create-qr-code/?size=140x140&data=${encodeURIComponent(ad.link)}" alt="Scan to visit" />
+               <span>Scan to visit</span>
+           </div>`
+        : "";
+
+    adsPanelBody.innerHTML = `
+        ${ad.imageUrl ? `<img class="ads-panel-poster" src="${ad.imageUrl}" alt="" />` : ""}
+        <div class="ads-panel-name">${name}</div>
+        ${desc ? `<div class="ads-panel-desc">${desc}</div>` : ""}
+        ${qrBlock}
     `;
 }
 
@@ -204,11 +216,11 @@ async function loadAds() {
         adsList = (json.data && json.data.ads) || [];
 
         if (!adsList.length) {
-            adsStrip.hidden = true;
+            adsPanel.hidden = true;
             return;
         }
 
-        adsStrip.hidden = false;
+        adsPanel.hidden = false;
         adsIndex = 0;
         renderAd();
 
