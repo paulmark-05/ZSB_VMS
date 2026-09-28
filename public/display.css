@@ -437,7 +437,10 @@ html, body {
     }
 }
 
-@media (max-width: 480px) {
+/* Most phones (portrait and small landscape) fall in here. 4 columns at
+   this width leaves each one too narrow to be worth it — 2 wider columns
+   read better and still only take 2 rows to show all 7 counters. */
+@media (max-width: 700px) {
     .board-grid {
         grid-template-columns: repeat(2, 1fr);
     }
