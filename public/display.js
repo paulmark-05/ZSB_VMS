@@ -1,10 +1,12 @@
 const TOTAL_COUNTERS = 7;
+const MAX_VISIBLE_PER_COUNTER = 4;
 
 const grid = document.getElementById("boardGrid");
 const clockEl = document.getElementById("clock");
 const dateEl = document.getElementById("boardDate");
 const connectionBanner = document.getElementById("connectionBanner");
 const overrideBanner = document.getElementById("overrideBanner");
+const adsStrip = document.getElementById("adsStrip");
 
 const WEEKDAYS = ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"];
 const MONTHS = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
@@ -103,18 +105,116 @@ function renderQueue(data) {
 
         }
 
-        bodyEl.classList.add(densityClass(tokens.length));
+        // Show only the next few waiting tokens so the board stays readable —
+        // the rest are summarized in a "+N more waiting" line instead of
+        // growing the column indefinitely.
+        const visible = tokens.slice(0, MAX_VISIBLE_PER_COUNTER);
+        const overflow = tokens.length - visible.length;
 
-        bodyEl.innerHTML = tokens.map(v => `
+        bodyEl.classList.add(densityClass(visible.length));
+
+        bodyEl.innerHTML = visible.map(v => `
             <div class="token-row">
                 <div class="token-number">T-${v.sequence}</div>
                 <div class="token-rank">${v.rank || ""}</div>
                 <div class="token-name">${v.name || ""}</div>
             </div>
-        `).join("");
+        `).join("") + (overflow > 0 ? `<div class="counter-more">+${overflow} more waiting</div>` : "");
 
     }
 
+}
+
+/* ================= NOTIFICATION SOUND ================= */
+// Web Audio API tone generator — no audio file asset needed. Browsers block
+// audio until a user gesture happens on the page at least once, so we lazily
+// create the AudioContext on the first click/touch/keypress anywhere.
+let audioCtx = null;
+
+function ensureAudioUnlocked() {
+    if (audioCtx) return;
+    try {
+        audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+    } catch {
+        // Web Audio not supported — sound simply won't play, nothing else breaks.
+    }
+}
+
+["click", "touchstart", "keydown"].forEach(evt =>
+    document.addEventListener(evt, ensureAudioUnlocked, { once: true })
+);
+
+function playChime() {
+    if (!audioCtx) return; // not yet unlocked by a user gesture on this page
+
+    try {
+        const now = audioCtx.currentTime;
+
+        [660, 880].forEach((freq, i) => {
+            const osc = audioCtx.createOscillator();
+            const gain = audioCtx.createGain();
+
+            osc.type = "sine";
+            osc.frequency.value = freq;
+
+            const start = now + i * 0.15;
+            gain.gain.setValueAtTime(0.0001, start);
+            gain.gain.exponentialRampToValueAtTime(0.25, start + 0.02);
+            gain.gain.exponentialRampToValueAtTime(0.0001, start + 0.32);
+
+            osc.connect(gain).connect(audioCtx.destination);
+            osc.start(start);
+            osc.stop(start + 0.34);
+        });
+    } catch {
+        // Ignore playback errors (e.g. autoplay still blocked) — the visual
+        // update from loadQueue() already happened regardless.
+    }
+}
+
+/* ================= SPONSORED ADS STRIP ================= */
+// Pulls the same Advertisements shown on the public ZSB portal (CORS is
+// already open there) and rotates through them along the bottom of the board.
+const ADS_API = "https://zsb-barasat.in/api/content";
+let adsList = [];
+let adsIndex = 0;
+
+function renderAd() {
+    if (!adsList.length) return;
+
+    const ad = adsList[adsIndex % adsList.length];
+    adsIndex++;
+
+    const name = ad.name || "Advertisement";
+    const caption = ad.kind === "listing"
+        ? [ad.category, ad.location].filter(Boolean).join(" · ")
+        : (ad.description ? ad.description.replace(/<[^>]*>/g, " ").trim() : (ad.caption || ""));
+
+    adsStrip.innerHTML = `
+        ${ad.imageUrl ? `<img class="ads-strip-img" src="${ad.imageUrl}" alt="" />` : ""}
+        <span class="ads-strip-text"><strong>${name}</strong>${caption ? " — " + caption : ""}</span>
+    `;
+}
+
+async function loadAds() {
+    try {
+        const res = await fetch(ADS_API);
+        const json = await res.json();
+
+        adsList = (json.data && json.data.ads) || [];
+
+        if (!adsList.length) {
+            adsStrip.hidden = true;
+            return;
+        }
+
+        adsStrip.hidden = false;
+        adsIndex = 0;
+        renderAd();
+
+    } catch (err) {
+        console.error("Failed to load ads:", err);
+    }
 }
 
 async function loadQueue() {
@@ -160,6 +260,10 @@ setInterval(loadQueue, 30000);
 // unattended kiosk safety net — full reload every 4 hours
 setTimeout(() => location.reload(), 4 * 60 * 60 * 1000);
 
+loadAds();
+setInterval(loadAds, 60000);  // refresh which ads are active every minute
+setInterval(renderAd, 7000);  // rotate the displayed ad every 7s
+
 if (typeof io !== "undefined") {
 
     const socket = io();
@@ -173,8 +277,10 @@ if (typeof io !== "undefined") {
         connectionBanner.classList.add("show");
     });
 
-    socket.on("queue-update", loadQueue);
-    socket.on("new-booking", loadQueue);
-    socket.on("counter-update", loadQueue);
+    const onUpdate = () => { playChime(); loadQueue(); };
+
+    socket.on("queue-update", onUpdate);
+    socket.on("new-booking", onUpdate);
+    socket.on("counter-update", onUpdate);
 
 }
