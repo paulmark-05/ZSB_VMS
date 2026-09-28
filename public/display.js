@@ -20,6 +20,8 @@ const connectionBanner = document.getElementById("connectionBanner");
 const overrideBanner = document.getElementById("overrideBanner");
 const adsPanel = document.getElementById("adsPanel");
 const adsPanelBody = document.getElementById("adsPanelBody");
+const noticeMarquee = document.getElementById("noticeMarquee");
+const noticeTrack = document.getElementById("noticeTrack");
 
 const WEEKDAYS = ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"];
 const MONTHS = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
@@ -220,24 +222,46 @@ function renderAd() {
     `;
 }
 
-async function loadAds() {
+// Renders the same live notices shown in the portal's own scrolling banner.
+// n.text is already sanitized HTML for custom notices (server/lib/sanitizeRich.js
+// on the portal) and a plain composed sentence for every other type — safe to
+// insert as-is, matching how the portal's own public.js renders them.
+function renderNotices(notices, speed) {
+    if (!notices || !notices.length) {
+        noticeMarquee.hidden = true;
+        return;
+    }
+
+    noticeMarquee.hidden = false;
+    noticeMarquee.style.setProperty("--notice-speed", Math.max(12, Number(speed) || 24) + "s");
+
+    // Duplicate the sequence once so the -50% translate loops seamlessly.
+    const seq = notices
+        .map((n) => `<span class="notice-item">${n.text}</span><span class="notice-item notice-sep">&bull;</span>`)
+        .join("");
+    noticeTrack.innerHTML = seq + seq;
+}
+
+async function loadPortalContent() {
     try {
         const res = await fetch(ADS_API);
         const json = await res.json();
+        const data = json.data || {};
 
-        adsList = (json.data && json.data.ads) || [];
+        adsList = data.ads || [];
 
         if (!adsList.length) {
             adsPanel.hidden = true;
-            return;
+        } else {
+            adsPanel.hidden = false;
+            adsIndex = 0;
+            renderAd();
         }
 
-        adsPanel.hidden = false;
-        adsIndex = 0;
-        renderAd();
+        renderNotices(data.notices, data.settings && data.settings.marqueeSpeed);
 
     } catch (err) {
-        console.error("Failed to load ads:", err);
+        console.error("Failed to load portal content (ads/notices):", err);
     }
 }
 
@@ -299,8 +323,8 @@ setInterval(loadQueue, 30000);
 // unattended kiosk safety net — full reload every 4 hours
 setTimeout(() => location.reload(), 4 * 60 * 60 * 1000);
 
-loadAds();
-setInterval(loadAds, 60000);  // refresh which ads are active every minute
+loadPortalContent();
+setInterval(loadPortalContent, 60000);  // refresh ads + notices every minute
 setInterval(renderAd, 7000);  // rotate the displayed ad every 7s
 
 if (typeof io !== "undefined") {
