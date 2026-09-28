@@ -1,5 +1,17 @@
 const TOTAL_COUNTERS = 7;
-const MAX_VISIBLE_PER_COUNTER = 3;
+// The kiosk screen has room for 3 full rows per counter. A narrower mobile
+// view (or the ZSB portal embed) doesn't, so it shows 2 real entries plus a
+// single "+N more waiting" summary card instead of shrinking rows to fit a
+// 3rd one — no scrolling needed inside a counter either way.
+const MAX_VISIBLE_PER_COUNTER_DESKTOP = 3;
+const MAX_VISIBLE_PER_COUNTER_MOBILE = 2;
+const MOBILE_BREAKPOINT = 900;
+
+function maxVisiblePerCounter() {
+    return window.innerWidth <= MOBILE_BREAKPOINT
+        ? MAX_VISIBLE_PER_COUNTER_MOBILE
+        : MAX_VISIBLE_PER_COUNTER_DESKTOP;
+}
 
 const grid = document.getElementById("boardGrid");
 const clockEl = document.getElementById("clock");
@@ -107,9 +119,9 @@ function renderQueue(data) {
         }
 
         // Show only the next few waiting tokens so the board stays readable —
-        // the rest are summarized in a "+N more waiting" line instead of
+        // the rest are summarized in a "+N more waiting" card instead of
         // growing the column indefinitely.
-        const visible = tokens.slice(0, MAX_VISIBLE_PER_COUNTER);
+        const visible = tokens.slice(0, maxVisiblePerCounter());
         const overflow = tokens.length - visible.length;
 
         bodyEl.classList.add(densityClass(visible.length));
@@ -229,6 +241,8 @@ async function loadAds() {
     }
 }
 
+let lastQueueData = null;
+
 async function loadQueue() {
 
     try {
@@ -236,6 +250,7 @@ async function loadQueue() {
         const res = await fetch(`${window.BASE_PATH}/display/queue`);
         const data = await res.json();
 
+        lastQueueData = data;
         renderQueue(data);
 
     } catch (err) {
@@ -262,6 +277,18 @@ function updateClock() {
 
 buildColumns();
 loadQueue();
+
+// Re-render (no re-fetch) when the viewport crosses the mobile breakpoint —
+// e.g. a phone rotating, or the host page resizing the embedding iframe —
+// so the 2-vs-3 visible row count stays correct without waiting on the
+// next poll.
+let resizeTimer = null;
+window.addEventListener("resize", () => {
+    clearTimeout(resizeTimer);
+    resizeTimer = setTimeout(() => {
+        if (lastQueueData) renderQueue(lastQueueData);
+    }, 200);
+});
 
 updateClock();
 setInterval(updateClock, 1000);
