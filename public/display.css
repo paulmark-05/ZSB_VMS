@@ -233,10 +233,16 @@ html, body {
 .counter-more {
     flex-shrink: 0;
     text-align: center;
+    background: #eef1fa;
+    border: 1px dashed #c7cede;
+    border-radius: 8px;
+    padding: 10px;
     font-size: 13px;
-    font-weight: 600;
-    color: #7a8199;
-    padding: 6px 4px 2px;
+    font-weight: 700;
+    color: #5f6b8a;
+    display: flex;
+    align-items: center;
+    justify-content: center;
 }
 
 /* ================= ADS PANEL ================= */
@@ -383,10 +389,10 @@ html, body {
        kiosk has a fixed, known viewport. On a phone (or embedded on the
        ZSB portal, which already scrolls), forcing 7 counters into one
        screen leaves no room to show queued visitors and clips them
-       instead. So on mobile the page is allowed to grow and scroll, and
-       each counter gets a fixed-height card that shows ~2.5 waiting
-       visitors and scrolls internally for the rest, rather than shrinking
-       everything until it's unreadable. */
+       instead. So on mobile the page is allowed to grow and scroll
+       instead, and each counter shows at most 2 real entries plus a
+       "+N more waiting" summary card (see display.js) sized to fit
+       without needing to scroll inside the counter itself. */
     html, body {
         height: auto;
         overflow: visible;
@@ -395,6 +401,19 @@ html, body {
     .board {
         height: auto;
         min-height: 100vh;
+    }
+
+    /* Two competing widths (brand text vs. the clock) squeezed the
+       headline into 2-3 broken lines. Stacking the date/time under the
+       headline instead of beside it gives the title the full width. */
+    .board-header {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 10px;
+    }
+
+    .board-clock-wrap {
+        align-items: flex-start;
     }
 
     .board-main {
@@ -408,57 +427,15 @@ html, body {
 
     .counter-body {
         flex: none;
-        height: 210px;
-        overflow-y: auto;
+        height: auto;
+        overflow: visible;
     }
 
+    /* Ads already have a dedicated section on the ZSB portal — showing
+       them again inside the embedded queue view just eats phone screen
+       space that the counters need. */
     .ads-panel {
-        width: 100%;
-        height: 100px;
-        flex-shrink: 0;
-        flex-direction: row;
-        align-items: center;
-        padding: 8px 14px;
-    }
-
-    .ads-panel-label {
         display: none;
-    }
-
-    .ads-panel-body {
-        flex-direction: row;
-        align-items: center;
-        text-align: left;
-    }
-
-    .ads-panel-poster {
-        width: 64px;
-        height: 64px;
-        max-height: none;
-        flex-shrink: 0;
-    }
-
-    .ads-panel-desc {
-        display: -webkit-box;
-        -webkit-box-orient: vertical;
-        -webkit-line-clamp: 2;
-        overflow: hidden;
-    }
-
-    .ads-panel-qr {
-        margin-top: 0;
-        margin-left: auto;
-        flex-direction: row;
-        gap: 8px;
-    }
-
-    .ads-panel-qr img {
-        width: 60px;
-        height: 60px;
-    }
-
-    .ads-panel-qr span {
-        max-width: 60px;
     }
 }
 
