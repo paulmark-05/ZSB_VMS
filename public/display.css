@@ -222,6 +222,55 @@ html, body {
     font-weight: 600;
 }
 
+.counter-more {
+    flex-shrink: 0;
+    text-align: center;
+    font-size: 13px;
+    font-weight: 600;
+    color: #7a8199;
+    padding: 6px 4px 2px;
+}
+
+/* ================= ADS STRIP ================= */
+
+.ads-strip {
+    flex-shrink: 0;
+    margin-top: 14px;
+    padding: 10px 20px;
+    background: #12213f;
+    border-radius: 12px;
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    color: #eaf2fb;
+    overflow: hidden;
+}
+
+.ads-strip[hidden] {
+    display: none;
+}
+
+.ads-strip-img {
+    height: 40px;
+    width: 60px;
+    object-fit: contain;
+    background: #fff;
+    border-radius: 6px;
+    flex-shrink: 0;
+}
+
+.ads-strip-text {
+    font-size: 15px;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.ads-strip-text strong {
+    color: #ffd7dd;
+    margin-right: 6px;
+}
+
 /* density steps, applied by JS based on row count */
 .density-1 .token-number { font-size: 40px; }
 .density-1 .token-rank { font-size: 15px; }
