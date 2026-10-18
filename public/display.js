@@ -1,4 +1,4 @@
-const TOTAL_COUNTERS = 7;
+const TOTAL_COUNTERS = 8;
 // The kiosk screen has room for 3 full rows per counter. A narrower mobile
 // view (or the ZSB portal embed) doesn't, so it shows 2 real entries plus a
 // single "+N more waiting" summary card instead of shrinking rows to fit a
@@ -200,7 +200,7 @@ function renderAd() {
     const ad = adsList[adsIndex % adsList.length];
     adsIndex++;
 
-    const name = ad.name || "Advertisement";
+    const name = ad.name || "Public Notice";
     const desc = ad.kind === "listing"
         ? [ad.category, ad.location].filter(Boolean).join(" · ")
         : (ad.description ? ad.description.replace(/<[^>]*>/g, " ").trim() : (ad.caption || ""));
