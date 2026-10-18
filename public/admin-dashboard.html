@@ -60,6 +60,12 @@
 
             </button>
 
+            <button id="setupTab" class="nav-pill">
+
+                Counters &amp; Works
+
+            </button>
+
             <button id="userManagementTab" class="nav-pill">
 
                 User Management
@@ -307,10 +313,6 @@
 
                 </div>
             </div>
-            <div id="toast" class="toast-notification">
-                Excel downloaded successfully
-            </div>
-
         </div>
 
         <div id="userManagementDashboard" style="display:none;">
@@ -395,15 +397,6 @@
 
                             <option value="">Select Counter</option>
 
-                            <option value="1">Counter 1</option>
-                            <option value="2">Counter 2</option>
-                            <option value="3">Counter 3</option>
-                            <option value="4">Counter 4</option>
-                            <option value="5">Counter 5</option>
-                            <option value="6">Counter 6</option>
-                            <option value="7">Counter 7</option>
-                            <option value="8">Counter 8</option>
-
                         </select>
 
                     </div>
@@ -433,6 +426,102 @@
 
 
 
+
+        <div id="setupDashboard" style="display:none;">
+
+            <h2>Counters &amp; Works</h2>
+
+            <div class="setup-block">
+
+                <div class="setup-heading">
+
+                    <h3>Counters</h3>
+
+                    <button id="addCounterBtn" onclick="addCounter()">
+                        Add counter
+                    </button>
+
+                </div>
+
+                <p class="setup-hint">
+                    A new counter gets the next number. Create its login under
+                    User Management, then add the works it handles below. The
+                    booking form and the TV board pick it up automatically.
+                </p>
+
+                <div class="table-wrapper">
+
+                    <table id="countersTable">
+
+                        <thead>
+                            <tr>
+                                <th>Counter</th>
+                                <th>Works</th>
+                                <th>Login</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+
+                        <tbody id="countersTableBody"></tbody>
+
+                    </table>
+
+                </div>
+
+            </div>
+
+            <div class="setup-block">
+
+                <h3>Works</h3>
+
+                <p class="setup-hint">
+                    What visitors choose on the booking form. Each work goes to
+                    one counter. Untick "Needs ZSB ID" for services that
+                    visitors without a ZSB ID card can also book.
+                </p>
+
+                <div class="setup-form">
+
+                    <input id="newWorkName" type="text" maxlength="120"
+                        placeholder="Work name, e.g. Canteen related assistance">
+
+                    <select id="newWorkCounter">
+                        <option value="">Counter</option>
+                    </select>
+
+                    <label class="setup-check">
+                        <input id="newWorkZsb" type="checkbox" checked>
+                        Needs ZSB ID
+                    </label>
+
+                    <button onclick="addWork()">Add work</button>
+
+                </div>
+
+                <div class="table-wrapper">
+
+                    <table id="worksTable">
+
+                        <thead>
+                            <tr>
+                                <th>Work</th>
+                                <th>Counter</th>
+                                <th>Needs ZSB ID</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+
+                        <tbody id="worksTableBody"></tbody>
+
+                    </table>
+
+                </div>
+
+            </div>
+
+        </div>
+
+        <div id="toast" class="toast-notification"></div>
 
         <script src="/socket.io/socket.io.js"></script>
         <script src="admin.js"></script>

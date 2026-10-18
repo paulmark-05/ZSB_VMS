@@ -18,42 +18,35 @@ const branchPrefixes = {
 // ================== MASTER CONFIG ==================
 const branchData = {
     "ZSB North 24 Parganas": {
-        sub: ["Barasat", "Barrackpore", "Bongaon", "Basirhat", "Bidhannagar"],
-
-        work: [
-            { name: "Registration for ESM / Widow I-card", counter: 1, requiresZsbId: false },
-            { name: "Issue of ESM / Widow I-card", counter: 1, requiresZsbId: false },
-            { name: "Issue of NOC for Shifting to new ZSB", counter: 1, requiresZsbId: false },
-            { name: "RSB I-card registration", counter: 1, requiresZsbId: false },
-
-            { name: "Change of Home Address", counter: 2 },
-            { name: "Submission of NOC from other ZSB", counter: 2 },
-
-            { name: "Issue of Relationship certificate from Record office", counter: 3 },
-            { name: "Change of Name and/or DOB", counter: 3 },
-            { name: "Publication/entry of NE Part II order", counter: 3 },
-
-            { name: "Registration of Dependent I-card", counter: 4 },
-            { name: "Issue of Dependent I-card", counter: 4 },
-
-            { name: "Pension & PPO related Job", counter: 5 },
-            { name: "Processing of Grants (CEG) - (KSB/WB/Army/Navy/AF)", counter: 5 },
-            { name: "Dependancy Certificate", counter: 5 },
-
-            { name: "Grant-in-Aid WWII", counter: 6 },
-            { name: "Life certificate Penury", counter: 6 },
-            { name: "AFFD Payment", counter: 6 },
-
-            { name: "Veer Pariwar Yojna DLSA", counter: 7 },
-            { name: "Job Sponsoring", counter: 7 },
-            { name: "Family Dispute", counter: 7 },
-            { name: "Grievance", counter: 7 },
-            { name: "Other Work", counter: 7 },
-
-            { name: "Canteen related assistance", counter: 8, requiresZsbId: false }
-        ]
+        sub: ["Barasat", "Barrackpore", "Bongaon", "Basirhat", "Bidhannagar"]
     }
 };
+
+// ================== WORK LIST ==================
+// Managed by the Super Admin (Setup tab), so it's loaded from the server
+// instead of being hardcoded here.
+let workList = [];
+let workLoadFailed = false;
+
+async function loadFormConfig() {
+
+    try {
+
+        const res = await fetch(`${window.BASE_PATH}/config/form`);
+
+        if (!res.ok) throw new Error(`HTTP ${res.status}`);
+
+        workList = (await res.json()).works;
+        workLoadFailed = false;
+
+    } catch (err) {
+
+        console.error("Could not load the work list:", err);
+        workLoadFailed = true;
+
+    }
+
+}
 
 
 // ================== CLOSED COUNTERS ==================
@@ -94,6 +87,10 @@ function formatDate(dateStr) {
 
 // ================== POPULATE ==================
 function populateDynamic() {
+    // remember the visitor's pick so a live update doesn't silently clear it
+    const previousWork =
+        document.querySelector("input[name='work']:checked")?.value;
+
     subDivision.innerHTML = `
 <option value="" disabled selected>
 Select Sub Division
@@ -115,7 +112,18 @@ Select Sub Division
     });
 
     // work options
-    data.work.forEach(w => {
+    if (workLoadFailed) {
+
+        const notice = document.createElement("p");
+        notice.style.color = "red";
+        notice.textContent =
+            "Couldn't load the list of services. Please refresh the page.";
+        workOptions.appendChild(notice);
+        return;
+
+    }
+
+    workList.forEach(w => {
 
         const isClosed = closedCounters.includes(w.counter);
 
@@ -126,17 +134,41 @@ Select Sub Division
         label.style.display = "block";
         label.style.marginBottom = "6px";
 
-        label.innerHTML = `
-                <input type="radio" name="work" value="${w.name}" data-counter="${w.counter}" ${disabled ? "disabled" : ""}>
-                ${w.name}
-                <span style="color:#777;font-size:12px;">(Counter ${w.counter})</span>
-                ${isClosed ? `<span style="color:red;font-size:11px;"> - CLOSED</span>` : ""}
-                ${disableByZsb
-                ? `<span title="ZSB ID card not available" style="color:red;font-size:11px;">
-                        - ZSB ID REQUIRED
-                    </span>`
-                : ""}
-            `;
+        // Built with DOM calls rather than an HTML string: work names are
+        // typed by an admin and may contain quotes or ampersands.
+        const radio = document.createElement("input");
+        radio.type = "radio";
+        radio.name = "work";
+        radio.value = w.name;
+        radio.dataset.counter = w.counter;
+        radio.disabled = disabled;
+
+        const counterTag = document.createElement("span");
+        counterTag.style.cssText = "color:#777;font-size:12px;";
+        counterTag.textContent = `(Counter ${w.counter})`;
+
+        label.append(radio, ` ${w.name} `, counterTag);
+
+        if (isClosed) {
+
+            const closedTag = document.createElement("span");
+            closedTag.style.cssText = "color:red;font-size:11px;";
+            closedTag.textContent = " - CLOSED";
+            label.append(closedTag);
+
+        }
+
+        if (disableByZsb) {
+
+            const zsbTag = document.createElement("span");
+            zsbTag.title = "ZSB ID card not available";
+            zsbTag.style.cssText = "color:red;font-size:11px;";
+            zsbTag.textContent = " - ZSB ID REQUIRED";
+            label.append(zsbTag);
+
+        }
+
+        if (radio.value === previousWork && !disabled) radio.checked = true;
 
         workOptions.appendChild(label);
     });
@@ -296,7 +328,7 @@ function initCalendar() {
 
 document.addEventListener("DOMContentLoaded", async () => {
 
-    await fetchClosedCounters();
+    await Promise.all([loadFormConfig(), fetchClosedCounters()]);
     populateDynamic();
 
     // calendar
@@ -318,6 +350,16 @@ document.addEventListener("DOMContentLoaded", async () => {
 
 });
 
+
+socket.on(
+    "config-update",
+    async () => {
+
+        await Promise.all([loadFormConfig(), fetchClosedCounters()]);
+
+        populateDynamic();
+    }
+);
 
 socket.on(
     "counter-update",

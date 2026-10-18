@@ -52,6 +52,21 @@ if (typeof io !== "undefined") {
         loadVisitors();
     });
 
+    // Another admin added, removed or edited a counter or work
+    socket.on("config-update", () => {
+        loadCounters();
+
+        if (window.currentUser?.role === "superadmin") {
+            populateCounterSelects();
+
+            if (
+                document.getElementById("setupDashboard").style.display !== "none"
+            ) {
+                loadSetup();
+            }
+        }
+    });
+
 } else {
     console.error("❌ Socket.IO not loaded");
 }
@@ -563,11 +578,7 @@ async function loadCounters() {
     panel.innerHTML =
         "";
 
-    for (
-        let i = 1;
-        i <= 8;
-        i++
-    ) {
+    for (const i of await getCounterNumbers()) {
 
         const isClosed =
 
@@ -739,6 +750,346 @@ async function setDisplayDate(useToday = false) {
 
 }
 
+// ================= COUNTERS & WORKS (Super Admin) =================
+
+async function getCounterNumbers() {
+
+    const res = await fetch(`${window.BASE_PATH}/config/form`);
+
+    return (await res.json()).counters;
+
+}
+
+// Fills every counter dropdown (Create User, Add work) from the live list.
+async function populateCounterSelects() {
+
+    const counters = await getCounterNumbers();
+
+    [
+        ["newCounter", "Select Counter"],
+        ["newWorkCounter", "Counter"]
+    ].forEach(([id, placeholder]) => {
+
+        const select = document.getElementById(id);
+
+        if (!select) return;
+
+        const previous = select.value;
+
+        select.innerHTML = "";
+        select.add(new Option(placeholder, ""));
+
+        counters.forEach(n => select.add(new Option(`Counter ${n}`, n)));
+
+        if ([...select.options].some(o => o.value === previous)) {
+            select.value = previous;
+        }
+
+    });
+
+}
+
+async function setupRequest(method, path, body) {
+
+    const response = await fetch(`${window.BASE_PATH}/admin/setup${path}`, {
+
+        method,
+
+        headers: { "Content-Type": "application/json" },
+
+        body: body ? JSON.stringify(body) : undefined
+
+    });
+
+    try {
+
+        return await response.json();
+
+    } catch {
+
+        return { success: false, message: "Unexpected response from the server." };
+
+    }
+
+}
+
+let setupData = null;
+
+async function loadSetup() {
+
+    const response = await fetch(`${window.BASE_PATH}/admin/setup`);
+
+    const result = await response.json();
+
+    if (!result.success) {
+
+        showToast(result.message || "Unable to load counters and works.");
+        return;
+
+    }
+
+    setupData = result;
+
+    renderSetup();
+
+}
+
+function textCell(text) {
+
+    const td = document.createElement("td");
+
+    td.textContent = text;
+
+    return td;
+
+}
+
+function actionButton(label, className, onClick) {
+
+    const button = document.createElement("button");
+
+    button.className = className;
+    button.textContent = label;
+    button.onclick = onClick;
+
+    return button;
+
+}
+
+// Built with DOM calls and textContent throughout, because work names are
+// typed by an admin.
+function renderSetup() {
+
+    const counterBody = document.getElementById("countersTableBody");
+
+    counterBody.innerHTML = "";
+
+    setupData.counters.forEach(c => {
+
+        const tr = document.createElement("tr");
+
+        const loginCell = document.createElement("td");
+
+        if (c.logins.length === 0) {
+
+            loginCell.textContent = "No login yet. Create one under User Management.";
+            loginCell.style.color = "#b3253a";
+
+        } else {
+
+            loginCell.textContent =
+                c.logins
+                    .map(l => l.active ? l.username : `${l.username} (disabled)`)
+                    .join(", ");
+
+        }
+
+        const actionCell = document.createElement("td");
+
+        actionCell.append(
+            actionButton("Remove", "delete-btn", () => removeCounter(c.number))
+        );
+
+        tr.append(
+            textCell(`Counter ${c.number}`),
+            textCell(String(c.workCount)),
+            loginCell,
+            actionCell
+        );
+
+        counterBody.appendChild(tr);
+
+    });
+
+    const addButton = document.getElementById("addCounterBtn");
+    const full = setupData.counters.length >= setupData.maxCounters;
+
+    addButton.disabled = full;
+    addButton.title = full
+        ? `The TV board can show at most ${setupData.maxCounters} counters.`
+        : "";
+
+    const workBody = document.getElementById("worksTableBody");
+
+    workBody.innerHTML = "";
+
+    setupData.works.forEach(w => {
+
+        const tr = document.createElement("tr");
+
+        const counterCell = document.createElement("td");
+        const counterSelect = document.createElement("select");
+
+        setupData.counters.forEach(c =>
+            counterSelect.add(new Option(`Counter ${c.number}`, c.number))
+        );
+
+        counterSelect.value = w.counter;
+        counterSelect.onchange = () =>
+            updateWork(w._id, { counter: Number(counterSelect.value) });
+
+        counterCell.append(counterSelect);
+
+        const zsbCell = document.createElement("td");
+        const zsbCheck = document.createElement("input");
+
+        zsbCheck.type = "checkbox";
+        zsbCheck.checked = w.requiresZsbId;
+        zsbCheck.onchange = () =>
+            updateWork(w._id, { requiresZsbId: zsbCheck.checked });
+
+        zsbCell.append(zsbCheck);
+
+        const actionCell = document.createElement("td");
+
+        actionCell.append(
+            actionButton("Rename", "small-btn", () => renameWork(w._id, w.name)),
+            " ",
+            actionButton("Delete", "delete-btn", () => deleteWork(w._id, w.name))
+        );
+
+        tr.append(textCell(w.name), counterCell, zsbCell, actionCell);
+
+        workBody.appendChild(tr);
+
+    });
+
+}
+
+async function refreshAfterSetupChange() {
+
+    await Promise.all([
+        loadSetup(),
+        loadCounters(),
+        populateCounterSelects()
+    ]);
+
+}
+
+async function addCounter() {
+
+    const result = await setupRequest("POST", "/counters");
+
+    if (!result.success) {
+
+        showToast(result.message || "Unable to add the counter.");
+        return;
+
+    }
+
+    showToast(`Counter ${result.number} added. Create its login under User Management.`);
+
+    await refreshAfterSetupChange();
+
+}
+
+async function removeCounter(number) {
+
+    if (!confirm(`Remove Counter ${number}? This can't be undone.`)) return;
+
+    const result = await setupRequest("DELETE", `/counters/${number}`);
+
+    if (!result.success) {
+
+        showToast(result.message || "Unable to remove the counter.");
+        return;
+
+    }
+
+    showToast(`Counter ${number} removed.`);
+
+    await refreshAfterSetupChange();
+
+}
+
+async function addWork() {
+
+    const nameInput = document.getElementById("newWorkName");
+    const counter = document.getElementById("newWorkCounter").value;
+
+    if (!nameInput.value.trim() || !counter) {
+
+        showToast("Enter a work name and choose a counter.");
+        return;
+
+    }
+
+    const result = await setupRequest("POST", "/works", {
+
+        name: nameInput.value,
+
+        counter: Number(counter),
+
+        requiresZsbId: document.getElementById("newWorkZsb").checked
+
+    });
+
+    if (!result.success) {
+
+        showToast(result.message || "Unable to add the work.");
+        return;
+
+    }
+
+    nameInput.value = "";
+
+    showToast("Work added. It's on the booking form now.");
+
+    await refreshAfterSetupChange();
+
+}
+
+async function updateWork(id, changes) {
+
+    const result = await setupRequest("PATCH", `/works/${id}`, changes);
+
+    if (!result.success) {
+
+        showToast(result.message || "Unable to update the work.");
+
+    } else {
+
+        showToast("Work updated.");
+
+    }
+
+    // reload either way so the table never shows a value the server rejected
+    await refreshAfterSetupChange();
+
+}
+
+async function renameWork(id, currentName) {
+
+    const name = prompt("New name for this work:", currentName);
+
+    if (name === null || name.trim() === currentName) return;
+
+    await updateWork(id, { name });
+
+}
+
+async function deleteWork(id, name) {
+
+    if (!confirm(
+        `Delete "${name}"? It disappears from the booking form. ` +
+        "Existing bookings keep their record."
+    )) return;
+
+    const result = await setupRequest("DELETE", `/works/${id}`);
+
+    if (!result.success) {
+
+        showToast(result.message || "Unable to delete the work.");
+        return;
+
+    }
+
+    showToast("Work deleted.");
+
+    await refreshAfterSetupChange();
+
+}
+
 // ================= SEARCH =================
 function populateFilterOptions() {
 
@@ -903,46 +1254,43 @@ document.addEventListener(
 
         }
 
-        const visitorTab =
-            document.getElementById("visitorTab");
+        const tabs = [
+            ["visitorTab", "visitorSection", null],
+            ["setupTab", "setupDashboard", loadSetup],
+            ["userManagementTab", "userManagementDashboard", loadUsers]
+        ];
 
-        const userTab =
-            document.getElementById("userManagementTab");
+        tabs.forEach(([tabId, sectionId, onOpen]) => {
 
-        const visitorSection =
-            document.getElementById("visitorSection");
+            const tab = document.getElementById(tabId);
 
-        const userSection =
-            document.getElementById("userManagementDashboard");
+            if (!tab) return;
 
-        if (
-            visitorTab &&
-            userTab &&
-            visitorSection &&
-            userSection
-        ) {
+            tab.onclick = async () => {
 
-            visitorTab.onclick = () => {
+                tabs.forEach(([otherTabId, otherSectionId]) => {
 
-                visitorTab.classList.add("active");
-                userTab.classList.remove("active");
+                    const active = otherTabId === tabId;
 
-                visitorSection.style.display = "block";
-                userSection.style.display = "none";
+                    document
+                        .getElementById(otherTabId)
+                        .classList.toggle("active", active);
 
-            };
+                    document
+                        .getElementById(otherSectionId)
+                        .style.display = active ? "block" : "none";
 
-            userTab.onclick = async () => {
+                });
 
-                userTab.classList.add("active");
-                visitorTab.classList.remove("active");
-
-                visitorSection.style.display = "none";
-                userSection.style.display = "block";
-
-                await loadUsers();
+                if (onOpen) await onOpen();
 
             };
+
+        });
+
+        if (window.currentUser.role === "superadmin") {
+
+            populateCounterSelects();
 
         }
 
@@ -1063,14 +1411,7 @@ async function startExport() {
 
         window.URL.revokeObjectURL(url);
 
-        // toast
-        const toast = document.getElementById("toast");
-
-        toast.classList.add("show");
-
-        setTimeout(() => {
-            toast.classList.remove("show");
-        }, 3000);
+        showToast("Excel downloaded successfully");
 
         closeExportModal();
 

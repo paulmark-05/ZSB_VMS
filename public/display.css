@@ -200,7 +200,10 @@ html, body {
     min-width: 0;
     min-height: 0;
     display: grid;
-    grid-template-columns: repeat(8, 1fr);
+    /* --counter-cols / --counter-rows are set from display.js, which builds
+       one column per counter the Super Admin has set up. */
+    grid-template-columns: repeat(var(--counter-cols, 8), minmax(0, 1fr));
+    grid-template-rows: repeat(var(--counter-rows, 1), minmax(0, 1fr));
     gap: 14px;
 }
 
@@ -505,6 +508,7 @@ html, body {
 
     .board-grid {
         grid-template-columns: repeat(4, 1fr);
+        grid-template-rows: none;
         grid-auto-rows: auto;
     }
 
