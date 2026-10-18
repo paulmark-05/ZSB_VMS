@@ -13,6 +13,12 @@ function maxVisiblePerCounter() {
         : MAX_VISIBLE_PER_COUNTER_DESKTOP;
 }
 
+// The ZSB portal embeds this board with ?embed=1. It already has its own
+// Public Notices section, so the board's notice panel is hidden there.
+if (new URLSearchParams(location.search).has("embed")) {
+    document.documentElement.classList.add("embed");
+}
+
 const grid = document.getElementById("boardGrid");
 const clockEl = document.getElementById("clock");
 const dateEl = document.getElementById("boardDate");

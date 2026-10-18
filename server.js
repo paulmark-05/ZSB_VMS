@@ -388,6 +388,12 @@ const displaySettingsSchema =
         date: {
             type: String,
             required: true
+        },
+
+        // The day the override was set. An override only holds for that
+        // same day; after that the board goes back to showing today.
+        setOn: {
+            type: String
         }
 
     });
@@ -1344,18 +1350,31 @@ router.get("/display", (req, res) => {
 
 });
 
-router.get("/display/queue", async (req, res) => {
+// The board shows today's queue by default. A Super Admin can pin it to
+// another date (e.g. to review a past day), but that pin expires when the
+// day changes so the board never gets stuck on an old date.
+async function resolveDisplayDate() {
 
     const today =
         new Date()
             .toISOString()
             .split("T")[0];
 
-    const displaySettings =
+    const settings =
         await DisplaySettings.findOne({ key: "display" });
 
-    const activeDate =
-        displaySettings?.date || today;
+    const pinned =
+        settings?.date && settings.setOn === today
+            ? settings.date
+            : null;
+
+    return pinned || today;
+
+}
+
+router.get("/display/queue", async (req, res) => {
+
+    const activeDate = await resolveDisplayDate();
 
     const [visitors, counterSettings] = await Promise.all([
 
@@ -1389,17 +1408,9 @@ router.get("/display/queue", async (req, res) => {
 // GET the date currently shown on the TV board (Super Admin only)
 router.get("/admin/display-date", requireSuperAdmin, async (req, res) => {
 
-    const today =
-        new Date()
-            .toISOString()
-            .split("T")[0];
-
-    const settings =
-        await DisplaySettings.findOne({ key: "display" });
-
     res.json({
 
-        date: settings?.date || today
+        date: await resolveDisplayDate()
 
     });
 
@@ -1423,7 +1434,10 @@ router.post("/admin/display-date", requireSuperAdmin, async (req, res) => {
 
         { key: "display" },
 
-        { date },
+        {
+            date,
+            setOn: new Date().toISOString().split("T")[0]
+        },
 
         { upsert: true }
 
