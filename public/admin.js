@@ -565,7 +565,7 @@ async function loadCounters() {
 
     for (
         let i = 1;
-        i <= 7;
+        i <= 8;
         i++
     ) {
 

@@ -47,6 +47,11 @@ const USERS = [
         username: "counter7",
         role: "counter",
         assignedCounter: 7
+    },
+    {
+        username: "counter8",
+        role: "counter",
+        assignedCounter: 8
     }
 ];
 

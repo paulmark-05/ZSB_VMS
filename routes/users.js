@@ -257,12 +257,12 @@ router.post(
                 role === "counter" &&
                 (
                     assignedCounter < 1 ||
-                    assignedCounter > 7
+                    assignedCounter > 8
                 )
             ) {
                 return res.status(400).json({
                     success: false,
-                    message: "Assigned counter must be between 1 and 7."
+                    message: "Assigned counter must be between 1 and 8."
                 });
             }
 

@@ -21,10 +21,10 @@ const branchData = {
         sub: ["Barasat", "Barrackpore", "Bongaon", "Basirhat", "Bidhannagar"],
 
         work: [
-            { name: "Registration for ESM / Widow I-card", counter: 1 },
-            { name: "Issue of ESM / Widow I-card", counter: 1 },
-            { name: "Issue of NOC for Shifting to new ZSB", counter: 1 },
-            { name: "RSB I-card registration", counter: 1 },
+            { name: "Registration for ESM / Widow I-card", counter: 1, requiresZsbId: false },
+            { name: "Issue of ESM / Widow I-card", counter: 1, requiresZsbId: false },
+            { name: "Issue of NOC for Shifting to new ZSB", counter: 1, requiresZsbId: false },
+            { name: "RSB I-card registration", counter: 1, requiresZsbId: false },
 
             { name: "Change of Home Address", counter: 2 },
             { name: "Submission of NOC from other ZSB", counter: 2 },
@@ -48,7 +48,9 @@ const branchData = {
             { name: "Job Sponsoring", counter: 7 },
             { name: "Family Dispute", counter: 7 },
             { name: "Grievance", counter: 7 },
-            { name: "Other Work", counter: 7 }
+            { name: "Other Work", counter: 7 },
+
+            { name: "Canteen related assistance", counter: 8, requiresZsbId: false }
         ]
     }
 };
@@ -117,7 +119,7 @@ Select Sub Division
 
         const isClosed = closedCounters.includes(w.counter);
 
-        const disableByZsb = (!zsbValue || !isValidZSB) && w.counter !== 1;
+        const disableByZsb = w.requiresZsbId !== false && (!zsbValue || !isValidZSB);
         const disabled = isClosed || disableByZsb;
 
         const label = document.createElement("label");
