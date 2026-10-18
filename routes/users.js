@@ -4,6 +4,7 @@ const bcrypt = require("bcrypt");
 const router = express.Router();
 
 const AdminUser = require("../models/AdminUser");
+const Counter = require("../models/Counter");
 
 const requireSuperAdmin = require("../middleware/requireSuperAdmin");
 
@@ -255,14 +256,13 @@ router.post(
 
             if (
                 role === "counter" &&
-                (
-                    assignedCounter < 1 ||
-                    assignedCounter > 8
-                )
+                !await Counter.exists({
+                    number: Number(assignedCounter)
+                })
             ) {
                 return res.status(400).json({
                     success: false,
-                    message: "Assigned counter must be between 1 and 8."
+                    message: "That counter doesn't exist. Add it under the Setup tab first."
                 });
             }
 
@@ -419,6 +419,25 @@ router.patch(
 
                     message:
                         "You cannot disable your own account."
+
+                });
+
+            }
+
+            if (
+                active &&
+                user.role === "counter" &&
+                !await Counter.exists({
+                    number: user.assignedCounter
+                })
+            ) {
+
+                return res.status(400).json({
+
+                    success: false,
+
+                    message:
+                        `Counter ${user.assignedCounter} no longer exists, so this login can't be enabled.`
 
                 });
 

@@ -1,16 +1,30 @@
-const TOTAL_COUNTERS = 8;
+// Counter numbers come from the server (the Super Admin adds and removes
+// them), so the board's columns are built from the first response.
+let counterNumbers = [];
+
+// Up to this many counters fit in a single row on the kiosk screen; beyond
+// it the board uses two rows, which leaves less height for each counter.
+const SINGLE_ROW_MAX = 8;
+
 // The kiosk screen has room for 3 full rows per counter. A narrower mobile
 // view (or the ZSB portal embed) doesn't, so it shows 2 real entries plus a
 // single "+N more waiting" summary card instead of shrinking rows to fit a
 // 3rd one — no scrolling needed inside a counter either way.
 const MAX_VISIBLE_PER_COUNTER_DESKTOP = 3;
+const MAX_VISIBLE_PER_COUNTER_TWO_ROWS = 2;
 const MAX_VISIBLE_PER_COUNTER_MOBILE = 2;
 const MOBILE_BREAKPOINT = 900;
 
 function maxVisiblePerCounter() {
-    return window.innerWidth <= MOBILE_BREAKPOINT
-        ? MAX_VISIBLE_PER_COUNTER_MOBILE
+
+    if (window.innerWidth <= MOBILE_BREAKPOINT) {
+        return MAX_VISIBLE_PER_COUNTER_MOBILE;
+    }
+
+    return counterNumbers.length > SINGLE_ROW_MAX
+        ? MAX_VISIBLE_PER_COUNTER_TWO_ROWS
         : MAX_VISIBLE_PER_COUNTER_DESKTOP;
+
 }
 
 // The ZSB portal embeds this board with ?embed=1. It already has its own
@@ -50,11 +64,18 @@ function densityClass(count) {
     return "density-4";
 }
 
-function buildColumns() {
+function buildColumns(counters) {
+
+    counterNumbers = counters;
 
     grid.innerHTML = "";
 
-    for (let i = 1; i <= TOTAL_COUNTERS; i++) {
+    const rows = counters.length > SINGLE_ROW_MAX ? 2 : 1;
+
+    grid.style.setProperty("--counter-rows", rows);
+    grid.style.setProperty("--counter-cols", Math.ceil(counters.length / rows));
+
+    for (const i of counters) {
 
         const col = document.createElement("div");
         col.className = "counter-column";
@@ -93,15 +114,19 @@ function renderQueue(data) {
 
     updateOverrideBanner(data.date);
 
+    const counters = data.counters || [];
+
+    if (counters.join() !== counterNumbers.join()) buildColumns(counters);
+
     const byCounter = {};
 
-    for (let i = 1; i <= TOTAL_COUNTERS; i++) byCounter[i] = [];
+    for (const i of counters) byCounter[i] = [];
 
     (data.visitors || []).forEach(v => {
         if (byCounter[v.counter]) byCounter[v.counter].push(v);
     });
 
-    for (let i = 1; i <= TOTAL_COUNTERS; i++) {
+    for (const i of counters) {
 
         const columnEl = document.getElementById(`counter-${i}`);
         const bodyEl = document.getElementById(`counter-${i}-body`);
@@ -305,7 +330,6 @@ function updateClock() {
 
 }
 
-buildColumns();
 loadQueue();
 
 // Re-render (no re-fetch) when the viewport crosses the mobile breakpoint —

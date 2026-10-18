@@ -1065,3 +1065,71 @@ gap:10px;
 margin-top:20px;
 
 }
+/* ================= COUNTERS & WORKS (Super Admin) ================= */
+
+.setup-block {
+    margin-bottom: 36px;
+}
+
+.setup-heading {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    margin-bottom: 6px;
+}
+
+.setup-heading h3 {
+    margin: 0;
+}
+
+.setup-hint {
+    color: #666;
+    font-size: 13px;
+    line-height: 1.5;
+    max-width: 70ch;
+    margin: 0 0 14px;
+}
+
+.setup-form {
+    display: flex;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 10px;
+    margin-bottom: 16px;
+}
+
+.setup-form input[type="text"] {
+    flex: 1 1 280px;
+    min-width: 0;
+}
+
+.setup-check {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 14px;
+    white-space: nowrap;
+}
+
+.small-btn {
+    padding: 6px 14px;
+    font-size: 13px;
+}
+
+#worksTable td select {
+    padding: 6px 8px;
+}
+
+#worksTable td:last-child,
+#countersTable td:last-child {
+    white-space: nowrap;
+}
+
+/* The global table rule forces a 1400px minimum for the wide visitor table;
+   these two are narrow enough to fit the card without sideways scrolling. */
+#countersTable,
+#worksTable {
+    min-width: 0;
+    width: 100%;
+}

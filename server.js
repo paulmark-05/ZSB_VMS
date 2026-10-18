@@ -27,6 +27,18 @@ const requireCounterOrSuper =
 const usersRoutes =
     require("./routes/users");
 
+const setupRoutes =
+    require("./routes/setup");
+
+const Work =
+    require("./models/Work");
+
+const Counter =
+    require("./models/Counter");
+
+const { seedConfigDefaults } =
+    require("./services/configDefaults");
+
 const app = express();
 app.set(
     "trust proxy",
@@ -96,6 +108,8 @@ router.use(
     "/admin",
     usersRoutes
 );
+
+router.use(setupRoutes);
 
 
 /* ================================
@@ -205,6 +219,9 @@ const { Server } = require("socket.io");
 const server = http.createServer(app);
 const io = new Server(server);
 
+// lets route modules broadcast live updates without importing this file
+app.set("io", io);
+
 
 
 
@@ -214,7 +231,10 @@ const io = new Server(server);
 
 // 🔴 Replace YOUR_PASSWORD
 mongoose.connect(process.env.MONGO_URI)
-    .then(() => console.log("✅ MongoDB Atlas Connected"))
+    .then(() => {
+        console.log("✅ MongoDB Atlas Connected");
+        return seedConfigDefaults();
+    })
     .catch(err => console.error("❌ MongoDB Error:", err));
 const nodemailer = require("nodemailer");
 const bcrypt = require("bcrypt");
@@ -506,9 +526,39 @@ router.post("/book", async (req, res) => {
             serviceNo,
             branch,
             subDivision,
-            work,
-            counter
+            work
         } = req.body;
+
+        // The counter and the ZSB ID rule come from the work itself, not from
+        // the browser, so a form left open while the Super Admin moved or
+        // edited that work can't book into the wrong counter.
+        const workDoc = await Work.findOne({
+            name: String(work || "").trim()
+        });
+
+        if (!workDoc) {
+
+            return res
+                .status(400)
+                .json({
+                    message:
+                        "This service is no longer available. Please refresh the page and choose again."
+                });
+
+        }
+
+        if (workDoc.requiresZsbId && !String(zsbId || "").trim()) {
+
+            return res
+                .status(400)
+                .json({
+                    message:
+                        "A ZSB ID card number is required for this service."
+                });
+
+        }
+
+        const counter = String(workDoc.counter);
 
         // normalize date (VERY IMPORTANT)
         const date = new Date(req.body.date).toISOString().split("T")[0];
@@ -1376,7 +1426,7 @@ router.get("/display/queue", async (req, res) => {
 
     const activeDate = await resolveDisplayDate();
 
-    const [visitors, counterSettings] = await Promise.all([
+    const [visitors, counterSettings, counters] = await Promise.all([
 
         Visitor.find({
 
@@ -1388,13 +1438,17 @@ router.get("/display/queue", async (req, res) => {
             .select("counter sequence rank name -_id")
             .sort({ counter: 1, sequence: 1 }),
 
-        CounterSettings.findOne({ date: activeDate })
+        CounterSettings.findOne({ date: activeDate }),
+
+        Counter.find().sort({ number: 1 }).select("number -_id").lean()
 
     ]);
 
     res.json({
 
         date: activeDate,
+
+        counters: counters.map(c => c.number),
 
         closedCounters:
             counterSettings?.closedCounters || [],
